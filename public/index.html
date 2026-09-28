@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="micro helper — AI-помощник с рабочими сценариями">
+  <title>micro helper</title>
+  <script>document.documentElement.dataset.theme=localStorage.getItem('micro-helper-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Unbounded:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Список чатов">
+      <div class="sidebar-brand">
+        <a class="brand" href="#" aria-label="micro helper"><span class="brand-mark"><i></i><i></i><i></i></span><span>micro helper<span class="brand-dot">.</span></span></a>
+        <button id="mobileClose" class="icon-button mobile-only" type="button" aria-label="Закрыть меню">×</button>
+      </div>
+      <button id="newChatButton" class="new-chat" type="button"><span>＋</span> Новый чат</button>
+      <div class="chat-list-label">Последние</div>
+      <div id="historyList" class="chat-list"></div>
+      <div id="emptyHistory" class="empty-chats"><span>Новых диалогов пока нет</span><small>Задайте первый вопрос справа</small></div>
+      <div class="sidebar-footer">
+        <button id="clearHistory" class="sidebar-link" type="button">Очистить историю</button>
+        <span>до 5 диалогов</span>
+      </div>
+    </aside>
+
+    <main class="chat-main">
+      <header class="chat-topbar">
+        <div class="chat-heading">
+          <button id="mobileMenu" class="icon-button mobile-only" type="button" aria-label="Открыть меню">☰</button>
+          <div><span id="chatKicker">НОВЫЙ ДИАЛОГ</span><h1 id="chatTitle">Без названия</h1></div>
+        </div>
+        <div class="top-actions">
+          <button id="apiStatusButton" class="status" type="button"><span class="status-dot"></span><span id="modeText">Подключить Groq</span></button>
+          <button id="themeToggle" class="icon-button" type="button" aria-label="Переключить тему" aria-pressed="false"><span class="theme-icon">☾</span></button>
+        </div>
+      </header>
+
+      <section id="messageList" class="message-list" aria-live="polite">
+        <div id="welcomeState" class="welcome-state">
+          <span class="welcome-mark">✦</span>
+          <p class="eyebrow">MICRO TOOL · REAL HELP</p>
+          <h2>С чего начнём?</h2>
+          <p>Выберите режим, опишите задачу — и продолжайте диалог сколько нужно. Контекст не потеряется.</p>
+          <div class="starter-grid">
+            <button type="button" data-mode="decision" data-question="Помоги выбрать, какую гипотезу продукта проверить первой"><span>01 · Решение</span><strong>Какую гипотезу проверить первой?</strong></button>
+            <button type="button" data-mode="meeting" data-question="Собери план ретро на 45 минут после сложного спринта"><span>02 · Встреча</span><strong>План ретро на 45 минут</strong></button>
+            <button type="button" data-mode="risks" data-question="Найди главные риски запуска новой функции через неделю"><span>03 · Риски</span><strong>Проверить запуск до релиза</strong></button>
+            <button type="button" data-mode="writing" data-question="Перепиши обновление для команды ясно и без канцелярита"><span>04 · Текст</span><strong>Обновление для команды</strong></button>
+          </div>
+        </div>
+      </section>
+
+      <div id="loadingRow" class="message-row assistant loading-row" hidden><div class="avatar">✦</div><div class="thinking"><i></i><i></i><i></i><span>Думаю и собираю главное…</span></div></div>
+
+      <section class="composer-wrap" aria-label="Новое сообщение">
+        <div class="mode-tabs" role="radiogroup" aria-label="Режим ответа">
+          <button class="mode-tab active" type="button" role="radio" aria-checked="true" data-mode="decision">Решение</button>
+          <button class="mode-tab" type="button" role="radio" aria-checked="false" data-mode="meeting">Встреча</button>
+          <button class="mode-tab" type="button" role="radio" aria-checked="false" data-mode="risks">Риски</button>
+          <button class="mode-tab" type="button" role="radio" aria-checked="false" data-mode="writing">Текст</button>
+        </div>
+        <div class="composer">
+          <textarea id="question" maxlength="1000" rows="1" placeholder="Сообщение для micro helper"></textarea>
+          <button id="askButton" class="send-button" type="button" aria-label="Отправить сообщение">↑</button>
+        </div>
+        <div class="composer-meta"><span id="inputError" role="alert"></span><span id="counter">0 / 1000 · ⌘ Enter</span></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="sidebarBackdrop" class="sidebar-backdrop" hidden></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="apiDialog" class="api-dialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-head"><span class="dialog-icon">⌁</span><button value="cancel" aria-label="Закрыть">×</button></div>
+      <p class="eyebrow">GROQ CONNECTION</p><h2>Подключить живой AI</h2>
+      <p class="dialog-copy">Ключ живёт только в памяти вкладки и исчезает после обновления страницы.</p>
+      <label for="apiKeyInput">API key</label>
+      <div class="key-row"><input id="apiKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="gsk_••••••••••••"><button id="toggleKeyVisibility" type="button" aria-label="Показать ключ">◉</button></div>
+      <p id="apiKeyError" class="dialog-error" role="alert"></p>
+      <div class="dialog-actions"><button value="cancel" class="dialog-cancel">Отмена</button><button id="saveApiKey" type="button" class="dialog-primary">Подключить</button></div>
+      <p class="security-note">Не сохраняется в файлах, истории или localStorage.</p>
+    </form>
+  </dialog>
+  <script src="/app.js" defer></script>
+</body>
+</html>
